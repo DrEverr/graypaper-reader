@@ -208,7 +208,7 @@ export function NotesProvider({ children }: INotesProviderProps) {
       downloadNotesAsJson(localNotes, fileName);
     }, [localNotes]),
     handleDeleteNotes: useCallback(() => {
-      var r = confirm("Are you sure you want to delete all filtered notes?");
+      const r = confirm("Are you sure you want to delete all filtered notes?");
       console.log("Labels state", labels);
       if (r === true) {
         const activeLabels = labels.filter((label) => label.isActive).map((label) => label.label);
