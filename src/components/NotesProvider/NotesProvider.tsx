@@ -1,6 +1,6 @@
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { type ILocationContext, LocationContext } from "../LocationProvider/LocationProvider";
-import { LABEL_IMPORTED } from "./consts/labels";
+import { LABEL_IMPORTED, LABEL_LOCAL, LABEL_REMOTE } from "./consts/labels";
 import { NEW_REMOTE_SOURCE_ID } from "./consts/remoteSources";
 import { useDecoratedNotes } from "./hooks/useDecoratedNotes";
 import { type ILabel, useLabels } from "./hooks/useLabels";
@@ -215,10 +215,13 @@ export function NotesProvider({ children }: INotesProviderProps) {
           .map((label) => {
             const parts = label.label.split("/");
             if (parts.length > 1) {
-              return parts.slice(1).join("/");
+              if (parts[0] === LABEL_LOCAL || parts[0] === LABEL_REMOTE) {
+                return parts.slice(1).join("/");
+              }
             }
             return label.label;
           });
+        console.log("Deleting notes with labels:", activeLabels);
         const updatedNotes = localNotes.notes.filter((note) => {
           if (note.labels.some((label) => activeLabels.includes(label))) {
             return false;
