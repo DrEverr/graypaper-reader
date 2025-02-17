@@ -219,7 +219,7 @@ export function NotesProvider({ children }: INotesProviderProps) {
         });
         updateLocalNotes(localNotes, { ...localNotes, notes: updatedNotes });
       }
-    }, [localNotes, localNotesDecorated, labels, updateLocalNotes]),
+    }, [localNotes, labels, updateLocalNotes]),
   };
 
   return <NotesContext.Provider value={context}>{children}</NotesContext.Provider>;
