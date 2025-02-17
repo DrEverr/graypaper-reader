@@ -209,10 +209,11 @@ export function NotesProvider({ children }: INotesProviderProps) {
     }, [localNotes]),
     handleDeleteNotes: useCallback(() => {
       var r = confirm("Are you sure you want to delete all filtered notes?");
+      console.log("Labels state", labels);
       if (r === true) {
         const activeLabels = labels.filter((label) => label.isActive).map((label) => label.label);
         const updatedNotes = localNotes.notes.filter((note) => {
-          if (note.labels.some((label) => activeLabels.includes(label))) {
+          if (activeLabels.every((label) => note.labels.includes(label))) {
             return false;
           }
           return true;
