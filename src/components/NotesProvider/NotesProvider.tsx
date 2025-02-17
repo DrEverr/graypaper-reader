@@ -209,7 +209,6 @@ export function NotesProvider({ children }: INotesProviderProps) {
     }, [localNotes]),
     handleDeleteNotes: useCallback(() => {
       const r = confirm("Are you sure you want to delete all filtered notes?");
-      console.log("Labels state", labels);
       if (r === true) {
         const activeLabels = labels.filter((label) => label.isActive).map((label) => label.label);
         const updatedNotes = localNotes.notes.filter((note) => {
@@ -220,7 +219,7 @@ export function NotesProvider({ children }: INotesProviderProps) {
         });
         updateLocalNotes(localNotes, { ...localNotes, notes: updatedNotes });
       }
-    }, [localNotes, localNotesDecorated, updateLocalNotes]),
+    }, [localNotes, localNotesDecorated, labels, updateLocalNotes]),
   };
 
   return <NotesContext.Provider value={context}>{children}</NotesContext.Provider>;
