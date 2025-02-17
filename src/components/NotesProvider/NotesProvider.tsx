@@ -33,6 +33,7 @@ export interface INotesContext {
   handleRedo(): void;
   handleImport(jsonStr: string, label: string): void;
   handleExport(): void;
+  handleDeleteNotes(): void;
   handleToggleLabel(label: string): void;
 }
 
@@ -206,6 +207,21 @@ export function NotesProvider({ children }: INotesProviderProps) {
       const fileName = `graypaper-notes-${new Date().toISOString()}.json`;
       downloadNotesAsJson(localNotes, fileName);
     }, [localNotes]),
+    handleDeleteNotes: useCallback(() => {
+      var r = confirm("Are you sure you want to delete all filtered notes?");
+      if (r === true) {
+        const activeLabels = labels.filter((label) => label.isActive).map((label) => label.label);
+        console.log("Active labels", activeLabels);
+        const updatedNotes = localNotes.notes.filter((note) => {
+          if (note.labels.some((label) => activeLabels.includes(label))) {
+            return false;
+          }
+          return true;
+        });
+        console.log("New notes", updatedNotes);
+        updateLocalNotes(localNotes, { ...localNotes, notes: updatedNotes });
+      }
+    }, [localNotes, localNotesDecorated, updateLocalNotes]),
   };
 
   return <NotesContext.Provider value={context}>{children}</NotesContext.Provider>;
