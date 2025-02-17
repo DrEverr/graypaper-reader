@@ -213,7 +213,7 @@ export function NotesProvider({ children }: INotesProviderProps) {
       if (r === true) {
         const activeLabels = labels.filter((label) => label.isActive).map((label) => label.label);
         const updatedNotes = localNotes.notes.filter((note) => {
-          if (activeLabels.every((label) => note.labels.includes(label))) {
+          if (note.labels.some((label) => activeLabels.includes(label))) {
             return false;
           }
           return true;
