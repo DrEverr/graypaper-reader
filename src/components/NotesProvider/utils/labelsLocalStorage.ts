@@ -1,6 +1,6 @@
-import type { ILabel } from "../hooks/useLabels";
+import { type ILabel, buildLabelHierarchy } from "../../Label/Label";
 
-const LOCAL_STORAGE_KEY = "labels-v1";
+const LOCAL_STORAGE_KEY = "labels-v2";
 
 function isLabel(x: unknown): x is ILabel {
   if (x === null || typeof x !== "object") {
@@ -22,15 +22,10 @@ export function loadFromLocalStorage(): ILabel[] {
     if (!Array.isArray(labels)) {
       return [];
     }
-
-    return labels
-      .map((x: unknown) => {
-        if (isLabel(x)) {
-          return x;
-        }
-        return null;
-      })
-      .filter((x) => x) as ILabel[];
+    // getting labels from local storage
+    const labelsStorage = labels.filter((x) => isLabel(x)) as ILabel[];
+    // building and returning labels with tree structure
+    return buildLabelHierarchy([], labelsStorage);
   } catch (e) {
     console.warn("Error reading labels", e);
     return [];

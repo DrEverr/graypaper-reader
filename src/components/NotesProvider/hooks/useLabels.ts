@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LABEL_IMPORTED, LABEL_LOCAL, LABEL_REMOTE } from "../consts/labels";
+import { type ILabel, filterDecoratedNotesByLabels, generateLabelTree } from "../../Label/Label";
+import { LABEL_LOCAL, LABEL_REMOTE } from "../consts/labels";
 import type { IDecoratedNote } from "../types/DecoratedNote";
 import { loadFromLocalStorage, saveToLocalStorage } from "../utils/labelsLocalStorage";
 
-export type ILabel = {
-  label: string;
-  isActive: boolean;
-};
-
+/**
+ * Filter out labels
+ * @param labels - list of labels to filter
+ * @param onlyNonEditable - if true, only non-editable labels are returned (like remote/local/imported:)
+ * @returns
+ */
 export function getEditableLabels(
   labels: string[],
   { onlyNonEditable }: { onlyNonEditable: boolean } = { onlyNonEditable: false },
 ) {
   return labels.filter((label) => {
-    if (label === LABEL_LOCAL || label === LABEL_REMOTE || label.startsWith(LABEL_IMPORTED)) {
+    if (label === LABEL_LOCAL || label === LABEL_REMOTE) {
       return onlyNonEditable;
     }
     return !onlyNonEditable;
@@ -24,7 +26,7 @@ export function getEditableLabels(
  * Maintains a list list of all labels (across all nodes) and allow to activate/deactivate them
  * to filter given list of all decorated notes.
  */
-export function useLabels(allNotes: IDecoratedNote[]): [IDecoratedNote[], ILabel[], (label: string) => void] {
+export function useLabels(allNotes: IDecoratedNote[]): [IDecoratedNote[], ILabel[], (label: ILabel) => void] {
   const [storageLabels, setStorageLabels] = useState<ILabel[]>([]);
   const [labels, setLabels] = useState<ILabel[]>([]);
 
@@ -39,9 +41,9 @@ export function useLabels(allNotes: IDecoratedNote[]): [IDecoratedNote[], ILabel
   }, [storageLabels]);
 
   // toggle label visibility
-  const toggleLabel = useCallback((label: string) => {
+  const toggleLabel = useCallback((label: ILabel) => {
     const toggle = (x: ILabel) => {
-      if (x.label === label) {
+      if (x.label === label.label && x.parent === label.parent) {
         return {
           ...x,
           isActive: !x.isActive,
@@ -51,15 +53,13 @@ export function useLabels(allNotes: IDecoratedNote[]): [IDecoratedNote[], ILabel
     };
 
     let newLabel: ILabel | null = null;
-    setLabels((labels) => {
-      const newLabels = labels.map(toggle);
-      newLabel = newLabels.find((x) => x.label === label) || null;
+    setLabels((prev) => {
+      const newLabels = prev.map(toggle);
+      newLabel = newLabels.find((x) => x.label === label.label) || null;
       return newLabels;
     });
-    // NOTE: we update storage labels separately, since they may have more entries
-    // than actually displayed labels.
     setStorageLabels((storageLabels) => {
-      if (storageLabels.find((x) => x.label === label) !== undefined) {
+      if (storageLabels.find((x) => x.label === label.label) !== undefined) {
         return storageLabels.map(toggle);
       }
       if (newLabel !== null) {
@@ -71,50 +71,30 @@ export function useLabels(allNotes: IDecoratedNote[]): [IDecoratedNote[], ILabel
 
   // maintain a set of labels inactive in local storage.
   const storageActivity = useMemo(() => {
-    const activity = new Map<string, boolean>();
+    const result = new Map<string, boolean>();
     for (const label of storageLabels) {
-      activity.set(label.label, label.isActive);
+      result.set(label.label, label.isActive);
     }
-    return activity;
+    return result;
   }, [storageLabels]);
 
   // Re-create labels on change in notes
   useEffect(() => {
-    const uniqueLabels = new Set<string>();
-    allNotes.map((note) => {
-      note.original.labels.map((label) => {
-        uniqueLabels.add(label);
-      });
-    });
-
-    setLabels((oldLabels) => {
-      const justNames = oldLabels.map((x) => x.label);
-      return Array.from(uniqueLabels.values()).map((label) => {
-        const oldLabelIdx = justNames.indexOf(label);
-        const activeByDefault = label !== LABEL_REMOTE;
-        const activeInStorage = storageActivity.get(label);
-        const isActive = activeInStorage ?? activeByDefault;
-
-        if (oldLabelIdx === -1) {
-          return { label, isActive };
-        }
-        return oldLabels[oldLabelIdx];
-      });
-    });
+    setLabels(
+      generateLabelTree(allNotes).map((label) => {
+        const isActive = storageActivity.get(label.label) || true;
+        return {
+          ...label,
+          isActive,
+        };
+      }),
+    );
   }, [allNotes, storageActivity]);
 
   // filter notes when labels are changing
   const filteredNotes = useMemo(() => {
-    // build a map
-    const active = new Map<string, boolean>();
-    labels.map((x) => active.set(x.label, x.isActive));
-
-    // filter out notes
-    return allNotes.filter((note) => {
-      const activeLabels = note.original.labels.filter((label) => active.get(label));
-      return activeLabels.length > 0;
-    });
-  }, [allNotes, labels]);
+    return filterDecoratedNotesByLabels(labels, allNotes, { hasLabels: true });
+  }, [labels, allNotes]);
 
   return [filteredNotes, labels, toggleLabel];
 }

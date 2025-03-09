@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { LABEL_REMOTE } from "../consts/labels";
 import { type IDecoratedNote, NoteSource } from "../types/DecoratedNote";
 import type { IRemoteSource } from "../types/RemoteSource";
 import type { INotesEnvelope, IStorageNote } from "../types/StorageNote";
@@ -33,7 +32,7 @@ export function useRemoteNotes(
         try {
           const data = await fetch(source);
           const content = await data.text();
-          const notes = importNotesFromJson(content, LABEL_REMOTE);
+          const notes = importNotesFromJson(content);
           newRemoteNotes.push(...notes.notes);
         } catch (e) {
           console.warn(`Error loading remote notes from ${source}`, e);

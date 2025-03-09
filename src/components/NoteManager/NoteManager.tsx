@@ -1,10 +1,9 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import "./NoteManager.css";
 import { validateMath } from "../../utils/validateMath";
-import { LabelsFilter } from "../LabelsFilter/LabelsFilter";
+import { LabelsFilterTree } from "../LabelsFilter/LabelsFilter";
 import { type ILocationContext, LocationContext } from "../LocationProvider/LocationProvider";
 import { type INotesContext, NotesContext } from "../NotesProvider/NotesProvider";
-import { LABEL_LOCAL } from "../NotesProvider/consts/labels";
 import type { IStorageNote } from "../NotesProvider/types/StorageNote";
 import { type ISelectionContext, SelectionContext } from "../SelectionProvider/SelectionProvider";
 import { Note } from "./components/Note";
@@ -56,8 +55,7 @@ function Notes() {
       selectionStart: locationParams.selectionStart,
       selectionEnd: locationParams.selectionEnd,
       version: locationParams.version,
-      // TODO [ToDr] user defined labels?
-      labels: [LABEL_LOCAL],
+      labels: [],
     };
 
     handleAddNote(newNote);
@@ -89,7 +87,7 @@ function Notes() {
         </button>
       </div>
 
-      <LabelsFilter labels={labels} onToggleLabel={handleToggleLabel} />
+      <LabelsFilterTree labels={labels} onToggleLabel={handleToggleLabel} />
       {notes.map((note) => (
         <Note key={note.key} note={note} onEditNote={handleUpdateNote} onDeleteNote={handleDeleteNote} />
       ))}

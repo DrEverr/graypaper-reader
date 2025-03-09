@@ -1,5 +1,5 @@
 import "./LabelsFilter.css";
-import { type ILabel, Label, getFullLabelName } from "../Label/Label";
+import { type ILabel, Label } from "../Label/Label";
 
 export type LabelsFilterProps = {
   labels: ILabel[];
@@ -7,7 +7,6 @@ export type LabelsFilterProps = {
 };
 
 export function LabelsFilterTree({ labels, onToggleLabel }: LabelsFilterProps) {
-  console.log("LabelsFilterTree", labels);
   return (
     <div className="label-tree-content">
       {labels
@@ -30,7 +29,7 @@ function LabelNode({ labels, label, onToggleLabel }: LabelLinkProps) {
   const isActive = label.isActive;
   const children = labels.filter((l) => {
     if (l.parent) {
-      return getFullLabelName(l.parent) === getFullLabelName(label);
+      return l.parent.label === label.label;
     }
     false;
   });
@@ -48,7 +47,7 @@ function LabelNode({ labels, label, onToggleLabel }: LabelLinkProps) {
         role="button"
       >
         <div className={clazz}>
-          <Label key={getFullLabelName(label)} label={label} prefix={prefix} />
+          <Label key={label.label} label={label} prefix={prefix} />
         </div>
       </div>
       {isActive && hasChildren && (

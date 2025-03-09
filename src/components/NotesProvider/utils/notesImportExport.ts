@@ -22,7 +22,7 @@ export function downloadNotesAsJson(notes: INotesEnvelope, fileName: string) {
  *
  * Removes non-user defined labels if `clearLabels` flag is set.
  */
-export function exportNotesAsJson(wrapper: INotesEnvelope, clearLabels: boolean): string {
+export function exportNotesAsJson(wrapper: INotesEnvelope, clearLabels?: boolean): string {
   const notes = wrapper.notes.slice();
   const newNotes = clearLabels
     ? notes.map((note) => ({
@@ -42,15 +42,17 @@ export function exportNotesAsJson(wrapper: INotesEnvelope, clearLabels: boolean)
  * This function supports parsing legacy version of the notes as well and converts
  * them to recent wrapper type.
  */
-export function importNotesFromJson(jsonStr: string, defaultLabel: string): INotesEnvelope {
+export function importNotesFromJson(jsonStr: string, defaultLabel?: string): INotesEnvelope {
   const parsed: unknown = JSON.parse(jsonStr);
   // V3
   if (isINotesEnvelopeV3(parsed)) {
-    parsed.notes.map((note) => {
-      if (note.labels.indexOf(defaultLabel) === -1) {
-        note.labels.unshift(defaultLabel);
-      }
-    });
+    if (defaultLabel) {
+      parsed.notes.map((note) => {
+        if (note.labels.indexOf(defaultLabel) === -1) {
+          note.labels.unshift(defaultLabel);
+        }
+      });
+    }
     return parsed;
   }
 
@@ -59,7 +61,7 @@ export function importNotesFromJson(jsonStr: string, defaultLabel: string): INot
     if (parsed.every(isINoteV2)) {
       return {
         version: 3,
-        notes: parsed.map((note) => convertNoteV2toV3(note, defaultLabel)),
+        notes: parsed.map((note) => convertNoteV2toV3(note, defaultLabel ? defaultLabel : "must-have-label")),
       };
     }
 
